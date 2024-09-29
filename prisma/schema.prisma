@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model files {
+  id          String     @id @default(uuid())
+  title       String
+  workspaceId String
+  folderId    String
+  iconId      String
+  data        String
+  inTrash     String
+  bannerUrl   String
+  createdAt   DateTime   @default(now())
+  folders     folders    @relation(fields: [folderId], references: [id])
+  workSpaces  workSpaces @relation(fields: [workspaceId], references: [id])
+}
+
+model folders {
+  id          String     @id @default(uuid())
+  title       String
+  workspaceId String
+  iconId      String
+  data        String
+  inTrash     String
+  bannerUrl   String
+  createdAt   DateTime   @default(now())
+  files       files[]
+  workSpaces  workSpaces @relation(fields: [workspaceId], references: [id])
+}
+
+model workSpaces {
+  id             String    @id @default(uuid())
+  workspaceOwner String
+  title          String
+  iconId         String
+  data           String
+  inTrash        String
+  logo           String
+  bannerUrl      String
+  createdAt      DateTime  @default(now())
+  files          files[]
+  folders        folders[]
+}
+
+model User {
+  id             String  @id @default(uuid())
+  fullName       String? @db.Text
+  avatarUrl      String? @db.Text
+  billingAddress Json?
+  paymentMethod  Json?
+
+  // Relations
+  subscriptions Subscription[]
+  customer      Customer?      @relation(fields: [id], references: [id])
+
+  @@map("users")
+}
+
+model Customer {
+  id               String @id @default(uuid())
+  stripeCustomerId String @db.Text
+  User             User[]
+
+  @@map("customers")
+}
+
+model Product {
+  id          String  @id @default(uuid())
+  active      Boolean
+  name        String
+  description String?
+  image       String?
+  metadata    Json?
+
+  // Relations
+  prices Price[]
+
+  @@map("products")
+}
+
+model Price {
+  id              String              @id @default(uuid())
+  productId       String?
+  active          Boolean
+  description     String?
+  unitAmount      BigInt
+  currency        String
+  type            PricingType
+  interval        PricingPlanInterval
+  intervalCount   Int
+  trialPeriodDays Int?
+  metadata        Json?
+
+  // Relations
+  product      Product?       @relation(fields: [productId], references: [id])
+  Subscription Subscription[]
+
+  @@map("prices")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  userId             String
+  status             SubscriptionStatus
+  metadata           Json?
+  priceId            String?
+  quantity           Int
+  cancelAtPeriodEnd  Boolean
+  created            DateTime           @default(now())
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime           @default(now())
+  endedAt            DateTime?
+  cancelAt           DateTime?
+  canceledAt         DateTime?
+  trialStart         DateTime?
+  trialEnd           DateTime?
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id])
+  price Price? @relation(fields: [priceId], references: [id])
+
+  @@map("subscriptions")
+}
+
+// Enum definitions for pricing and subscription types
+enum PricingType {
+  one_time
+  recurring
+}
+
+enum PricingPlanInterval {
+  day
+  week
+  month
+  year
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  canceled
+  incomplete
+  incomplete_expired
+  past_due
+  unpaid
+}
