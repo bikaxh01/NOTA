@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { signInFormData } from "@/lib/form-schema/sign-in";
+import { signInFormSchema } from "@/lib/form-schema/auth-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,13 +21,13 @@ import Image from "next/image";
 import Logo from "../../../../public/cypresslogo.svg";
 import Template from "../Template";
 import Loader from "@/components/global/loader";
-import { login } from "@/lib/server-actions/signIn-action";
+import { login } from "@/lib/server-actions/auth-actions";
 function SignInPage() {
   const router = useRouter();
   const [submitError, setSubmitError] = useState("");
 
-  const form = useForm<z.infer<typeof signInFormData>>({
-    resolver: zodResolver(signInFormData),
+  const form = useForm<z.infer<typeof signInFormSchema>>({
+    resolver: zodResolver(signInFormSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -36,7 +36,7 @@ function SignInPage() {
 
   const isLoading = form.formState.isSubmitting;
 
-  const onSubmit = async (values: z.infer<typeof signInFormData>) => {
+  const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
     console.log("🚀 ~ onSubmit ~ values:", values);
     //@ts-ignore
     const { error } = await login(values);
