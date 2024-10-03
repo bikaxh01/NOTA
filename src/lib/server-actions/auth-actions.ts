@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { signInFormSchema, signUpFormSchema } from "../form-schema/auth-schema";
+import { signInFormSchema } from "../form-schema/auth-schema";
 import { redirect } from "next/navigation";
 export async function login({
   email,
